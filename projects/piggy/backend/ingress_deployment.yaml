@@ -21,7 +21,7 @@ spec:
               servicePort: 80
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -30,19 +30,22 @@ metadata:
   namespace: piggy
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: piggy-backend
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: piggy
+        app: piggy-backend
       annotations:
         prometheus.io/path: '/actuator/prometheus'
         prometheus.io/port: '8080'
         prometheus.io/scrape: 'true'
     spec:
       containers:
-      - image: pmorjan/demo:latest
+      - image: sp0re90/piggy:latest
         name: piggy-backend
         imagePullPolicy: Always
         # readinessProbe:
