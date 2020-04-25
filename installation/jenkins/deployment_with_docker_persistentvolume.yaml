@@ -18,23 +18,42 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: jenkins-home-persistent
+            - name: jenkins-storage
               mountPath: /var/jenkins_home
             - name: dockersock
               mountPath: "/var/run/docker.sock"
       volumes:
-        - name: jenkins-home-persistent
+        - name: jenkins-storage
           persistentVolumeClaim:
-            claimName: jenkins-home-pv-claim
+            claimName: jenkins-pv-claim
         - name: dockersock
           hostPath:
             path: /var/run/docker.sock
 
 ---
 apiVersion: v1
+kind: PersistentVolume            # Create a PersistentVolume
+metadata:
+  name: jenkins-pv
+  namespace: jenkins
+  labels:
+    type: local
+spec:
+  storageClassName: standard      # Storage class. A PV Claim requesting the same storageClass can be bound to this volume.
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:                       # hostPath PersistentVolume is used for development and testing. It uses a file/directory on the Node to emulate network-attached storage
+    path: "/mnt/jenkins/data"
+  persistentVolumeReclaimPolicy: Retain  # Retain the PersistentVolume even after PersistentVolumeClaim is deleted. The volume is considered “released”. But it is not yet available for another claim because the previous claimant’s data remains on the volume.
+
+
+---
+apiVersion: v1
 kind: PersistentVolumeClaim        # Create a PersistentVolumeClaim to request a PersistentVolume storage
 metadata:                          # Claim name and labels
-  name: jenkins-home-pv-claim
+  name: jenkins-pv-claim
   namespace: jenkins
   labels:
     app: jenkins
@@ -44,23 +63,5 @@ spec:                              # Access mode and resource limits
     - ReadWriteOnce                # ReadWriteOnce means the volume can be mounted as read-write by a single Node
   resources:
     requests:
-      storage: 2Gi
-
----
-apiVersion: v1
-kind: PersistentVolume            # Create a PersistentVolume
-metadata:
-  name: jenkins-home-pv
-  namespace: jenkins
-  labels:
-    type: local
-spec:
-  storageClassName: standard      # Storage class. A PV Claim requesting the same storageClass can be bound to this volume.
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:                       # hostPath PersistentVolume is used for development and testing. It uses a file/directory on the Node to emulate network-attached storage
-    path: "/mnt/jenkins/data"
-  persistentVolumeReclaimPolicy: Retain  # Retain the PersistentVolume even after PersistentVolumeClaim is deleted. The volume is considered “released”. But it is not yet available for another claim because the previous claimant’s data remains on the volume.
+      storage: 5Gi
 
