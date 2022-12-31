@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: game-collector-internal
+  namespace: games-catalogue
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  #  tls:
+  #  - hosts:
+  #    - piggy-backend.test.com
+  #    secretName: piggy-backend.test.com
+  rules:
+    - host: game-collector.internal.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: game-collector
+                port:
+                  number: 80
