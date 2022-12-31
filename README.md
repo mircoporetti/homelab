@@ -1,2 +1,3 @@
-# kube-notes
-Some useful kube file
+# Infrastructure files
+
+Some useful definition files for Kubernetes and CI/CD
