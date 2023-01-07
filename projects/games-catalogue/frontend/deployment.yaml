@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: games-catalogue
+  name: games-catalogue
+  namespace: games-catalogue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: games-catalogue
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: games-catalogue
+#      annotations:
+#        prometheus.io/path: '/actuator/prometheus'
+#        prometheus.io/port: '8081'
+#        prometheus.io/scrape: 'true'
+    spec:
+      containers:
+      - image: sp0re90/games-catalogue:latest
+        name: games-catalogue
+        imagePullPolicy: Always
+        # readinessProbe:
+        #   httpGet:
+        #     scheme: HTTP
+        #     path: /actuator/health
+        #     port: 8080
+        #   initialDelaySeconds: 240
+        #   periodSeconds: 5
+        #   timeoutSeconds: 5
+        #   successThreshold: 1
+        #   failureThreshold: 10
+        # livenessProbe:
+        #   httpGet:
+        #     scheme: HTTP
+        #     path: /actuator/health
+        #     port: 8080
+        #   initialDelaySeconds: 300
+        #   periodSeconds: 60
+        #   timeoutSeconds: 10
+        #   successThreshold: 1
+        #   failureThreshold: 3 
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 3000
+        #volumeMounts:
+        #- name: config-volume
+        #  mountPath: /app/config
+        #volumes:
+        #  - name: config-volume
+        #    configMap:
+        #      name: core-config-0.0.0-alpha
