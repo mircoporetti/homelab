@@ -1,0 +1,6 @@
+releases:
+  - name: pihole
+    namespace: pihole
+    chart: mojo2600/pihole
+    values:
+      - pihole-values.yaml
