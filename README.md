@@ -1,3 +1,3 @@
 # My Homelab
 
-Some useful definition files for Kubernetes and CI/CD
+Welcome to my HomeLab castle, where elves cook with passion in the kitchens
