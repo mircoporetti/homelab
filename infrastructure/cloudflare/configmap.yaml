@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: cloudflared
+data:
+  config.yml: |
+    tunnel: b7f8cb31-94fe-4760-b7ee-b04b097349f3
+    credentials-file: /etc/cloudflared/b7f8cb31-94fe-4760-b7ee-b04b097349f3.json
+    ingress:
+      - hostname: poll-e.mircoporetti.me
+        service: http://10.43.167.155
+      - hostname: elections-assistant.mircoporetti.me
+        service: http://10.43.15.161
+      - service: http_status:404
