@@ -1,0 +1,33 @@
+repositories:
+  - name: longhorn
+    url: https://charts.longhorn.io
+
+releases:
+  - name: longhorn
+    namespace: longhorn-system
+    createNamespace: false
+    chart: longhorn/longhorn
+    version: "1.9.x"
+    wait: true
+    values:
+      - longhornUI:
+          replicas: 1
+      - service:
+          ui:
+            type: LoadBalancer
+            loadBalancerIP: 192.168.178.249
+      - defaultSettings:
+          defaultDataPath: "/data/hogwarts-kitchen/storage"
+      - persistence:
+          defaultClass: "longhorn-sc"
+      - preUpgradeChecker:
+          jobEnabled: false
+    hooks:
+      - events: ["prepare"]
+        showlogs: true
+        command: kubectl
+        args: ["apply", "-f", "namespace.yaml"]
+      - events: ["prepare"]
+        showlogs: true
+        command: kubectl
+        args: ["apply", "-f", "storage-classes.yaml"]
