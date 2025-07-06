@@ -12,4 +12,6 @@ data:
         service: http://10.43.167.155
       - hostname: elections-assistant.mircoporetti.me
         service: http://10.43.15.161
+      - hostname: elm-chat.mircoporetti.me
+        service: http://10.43.46.32
       - service: http_status:404
