@@ -1,0 +1,41 @@
+---
+- name: Install k3s server node on x86_64 Debian
+  hosts: control_plane_nodes
+  become: yes
+  vars:
+    node_token: "your_super_secret_k3s_token"
+    k3s_version: "v1.33.1+k3s1"
+
+  tasks:
+    - name: Install open-iscsi
+      apt:
+        name: open-iscsi
+        state: present
+        update_cache: yes
+
+    - name: Download k3s install script
+      get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s_install.sh
+        mode: '0755'
+
+    - name: Install k3s server
+      shell: |
+        K3S_TOKEN={{ node_token }} \
+        INSTALL_K3S_VERSION={{ k3s_version | default('') }} \
+        sh /tmp/k3s_install.sh --cluster-init
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Ensure k3s service is started and enabled
+      systemd:
+        name: k3s
+        state: started
+        enabled: yes
+
+    - name: Taint control plane node to prevent scheduling non-system pods
+      shell: kubectl taint node {{ inventory_hostname }} CriticalAddonsOnly=true:NoSchedule --overwrite
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      register: taint_result
+      changed_when: "'tainted' in taint_result.stdout"
