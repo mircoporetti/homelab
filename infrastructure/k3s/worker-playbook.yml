@@ -5,11 +5,15 @@
   vars:
     control_plane_ip: "192.168.178.100"
     node_token: "your_super_secret_k3s_token"
-    node_name: "kreacher"
-    node_label: "worker-i5"
     k3s_version: "v1.33.1+k3s1"
 
   tasks:
+    - name: Install open-iscsi
+      apt:
+        name: open-iscsi
+        state: present
+        update_cache: yes
+
     - name: Download k3s install script
       get_url:
         url: https://get.k3s.io
@@ -21,18 +25,17 @@
         K3S_URL=https://{{ control_plane_ip }}:6443 \
         K3S_TOKEN={{ node_token }} \
         INSTALL_K3S_VERSION={{ k3s_version | default('') }} \
-        sh /tmp/k3s_install.sh --node-name {{ node_name }}
+        sh /tmp/k3s_install.sh --node-name {{ inventory_hostname }}
       args:
         creates: /usr/local/bin/k3s
 
     - name: Label node as worker
-      shell: kubectl label node {{ node_name }} node-role.kubernetes.io/worker={{ node_label }} --overwrite
+      shell: kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker={{ node_label }} --overwrite
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
       register: label_result
       changed_when: "'labeled' in label_result.stdout or 'updated' in label_result.stdout"
       delegate_to: dumbledore
-      run_once: true
 
     - name: Ensure k3s-agent service is started and enabled
       systemd:
