@@ -14,4 +14,6 @@ data:
         service: http://10.43.15.161
       - hostname: elm-chat.mircoporetti.me
         service: http://10.43.46.32
+      - hostname: aw-poretti-pisano.mircoporetti.me
+        service: http://10.43.138.141
       - service: http_status:404
