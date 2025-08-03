@@ -11,13 +11,13 @@ serviceDhcp:
 
 serviceDns:
   type: LoadBalancer
-  loadBalancerIP: 192.168.178.250
+  loadBalancerIP: 192.168.0.248
   annotations:
     metallb.universe.tf/allow-shared-ip: pihole
 
 serviceWeb:
   type: LoadBalancer
-  loadBalancerIP: 192.168.178.250
+  loadBalancerIP: 192.168.0.248
   annotations:
     metallb.universe.tf/allow-shared-ip: pihole
   externalTrafficPolicy: Local
@@ -35,6 +35,10 @@ resources:
 
 persistentVolumeClaim:
   enabled: true
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  storageClass: longhorn-sc
 
 adlists:
   - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/light.txt
@@ -209,3 +213,4 @@ extraEnvVars:
   TZ: Europe/Rome
   PIHOLE_SETUP_ADLISTS: "true"
   SKIPGRAVITYONBOOT: "false"
+  MAXDBDAYS: 2
