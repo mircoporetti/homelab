@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-sensebuilding-sandbox-config
+  namespace: cloudflared
+data:
+  config.yml: |
+    tunnel: 1286c0cb-c987-44ee-9f36-47b10f4b96d5
+    credentials-file: /etc/cloudflared/1286c0cb-c987-44ee-9f36-47b10f4b96d5.json
+    ingress:
+      - hostname: sandbox.sensebuilding.com
+        service: http://10.43.163.202
+      - service: http_status:404
