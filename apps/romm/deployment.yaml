@@ -1,0 +1,187 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: romm
+  namespace: romm
+  labels:
+    app: romm
+spec:
+  replicas: 1
+  # The Longhorn volumes are ReadWriteOnce, so two pods can't hold them at once
+  # during a rolling update.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: romm
+  template:
+    metadata:
+      labels:
+        app: romm
+    spec:
+      # Without this, Kubernetes injects every Service address as an env var
+      # (ROMM_DB_PORT_3306_TCP_ADDR and friends). RomM's nginx template picks
+      # those up and tries to bind them, and the container fails to start. This
+      # is the first item on RomM's own Kubernetes troubleshooting page.
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values: ["amd64"]
+          # Prefer kreacher (16GB) for library scans, but allow failover to dobby.
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values: ["kreacher"]
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 60
+        - key: node.kubernetes.io/unreachable
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 60
+      initContainers:
+        - name: wait-for-db
+          image: mariadb:11.4
+          command:
+            - sh
+            - -c
+            - |
+              # --skip-ssl is required: MariaDB 11.4 serves TLS with a
+              # self-signed cert and its 11.4 client verifies certs by default,
+              # so a plain ping fails with a TLS error even when the server is
+              # healthy. This is only a liveness check, not a data connection.
+              until mariadb-admin ping -h romm-db --skip-ssl --silent; do
+                echo "waiting for romm-db..."
+                sleep 3
+              done
+              echo "romm-db is up"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      containers:
+        - name: romm
+          image: rommapp/romm:5.2.0
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: romm-db
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: romm
+            - name: DB_USER
+              value: romm-user
+            - name: DB_PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secrets
+                  key: DB_PASSWD
+            - name: ROMM_AUTH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secrets
+                  key: ROMM_AUTH_SECRET_KEY
+            - name: IPV4_ONLY
+              value: "true"
+            - name: ROMM_BASE_URL
+              value: https://romm.mircoporetti.me
+            - name: ROMM_SESSION_SECURE_COOKIE
+              value: "true"
+            - name: ROMM_CORS_ALLOWED_ORIGINS
+              value: https://romm.mircoporetti.me
+            - name: ENABLE_RESCAN_ON_FILESYSTEM_CHANGE
+              value: "false"
+            - name: ENABLE_SYNC_FOLDER_WATCHER
+              value: "false"
+            - name: ENABLE_SCHEDULED_RESCAN
+              value: "true"
+            - name: SCHEDULED_RESCAN_CRON
+              value: "0 3 * * *"
+            - name: HASHEOUS_API_ENABLED
+              value: "true"
+            - name: TZ
+              value: Europe/Rome
+          startupProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: 8080
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          volumeMounts:
+            # The NAS library, read-write so browser uploads land on the NAS at
+            # Roms/<platform>/. Mounted at the default 'roms' folder name, so no
+            # filesystem.roms_folder override is needed in config.yml. Platform
+            # folders inside are lowercase RomM slugs.
+            - name: library
+              mountPath: /romm/library/roms
+            # Firmware uploads stay on Longhorn rather than the NAS.
+            - name: bios
+              mountPath: /romm/library/bios
+            - name: resources
+              mountPath: /romm/resources
+            - name: assets
+              mountPath: /romm/assets
+            - name: config
+              mountPath: /romm/config
+            - name: redis
+              mountPath: /redis-data
+      volumes:
+        - name: library
+          persistentVolumeClaim:
+            claimName: romm-library
+        - name: bios
+          persistentVolumeClaim:
+            claimName: romm-bios
+        - name: resources
+          persistentVolumeClaim:
+            claimName: romm-resources
+        - name: assets
+          persistentVolumeClaim:
+            claimName: romm-assets
+        - name: config
+          persistentVolumeClaim:
+            claimName: romm-config
+        - name: redis
+          persistentVolumeClaim:
+            claimName: romm-redis

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: romm-library-smb
+spec:
+  capacity:
+    storage: 1Ti                          # ignored by the SMB driver, but required
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain   # never let Kubernetes delete the NAS data
+  storageClassName: ""
+  mountOptions:
+    - dir_mode=0775
+    - file_mode=0664
+    - uid=1000
+    - gid=1000
+    - vers=3.1.1
+    - cache=strict
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: 192.168.0.104/Roms
+    volumeAttributes:
+      source: //192.168.0.104/Roms
+    nodeStageSecretRef:
+      name: romm-smbcreds
+      namespace: romm

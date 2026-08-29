@@ -18,6 +18,11 @@ releases:
             loadBalancerIP: 192.168.0.249
       - defaultSettings:
           defaultDataPath: "/data/hogwarts-kitchen/storage"
+          # When a node goes down, force-delete its stuck pods so Longhorn can
+          # detach the volumes and reattach them elsewhere. Without this a
+          # StatefulSet never recovers on its own: Kubernetes won't recreate the
+          # ordinal while the original pod is Terminating on an unreachable node.
+          nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
       - persistence:
           defaultClass: "longhorn-sc"
       - preUpgradeChecker:
