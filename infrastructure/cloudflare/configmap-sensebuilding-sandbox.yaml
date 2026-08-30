@@ -10,4 +10,6 @@ data:
     ingress:
       - hostname: sandbox.sensebuilding.com
         service: http://10.43.163.202
+      - hostname: staging.sensebuilding.com
+        service: http://10.43.130.64
       - service: http_status:404
