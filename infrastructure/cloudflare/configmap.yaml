@@ -18,4 +18,8 @@ data:
         service: http://10.43.138.141
       - hostname: romm.mircoporetti.me
         service: http://romm.romm.svc.cluster.local:8080
+      - hostname: catsitting-charlottenburg.de
+        service: http://catsitting-charlottenburg.catsitting-charlottenburg.svc.cluster.local
+      - hostname: www.catsitting-charlottenburg.de
+        service: http://catsitting-charlottenburg.catsitting-charlottenburg.svc.cluster.local
       - service: http_status:404
