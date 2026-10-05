@@ -22,4 +22,6 @@ data:
         service: http://catsitting-charlottenburg.catsitting-charlottenburg.svc.cluster.local
       - hostname: www.catsitting-charlottenburg.de
         service: http://catsitting-charlottenburg.catsitting-charlottenburg.svc.cluster.local
+      - hostname: hangman.mircoporetti.me
+        service: http://hangman.hangman.svc.cluster.local
       - service: http_status:404
