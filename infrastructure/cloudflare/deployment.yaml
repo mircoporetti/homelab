@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:latest
+          image: cloudflare/cloudflared:2026.10.4
           command: ["cloudflared", "tunnel", "--config", "/etc/cloudflared/config.yml", "run"]
           volumeMounts:
             - name: cloudflared-config
