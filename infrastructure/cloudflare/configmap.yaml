@@ -26,4 +26,6 @@ data:
         service: http://hangman.hangman.svc.cluster.local
       - hostname: api-ambrogio.mircoporetti.me
         service: http://backend.ambrogio.svc.cluster.local:8080
+      - hostname: ambrogio.mircoporetti.me
+        service: http://web.ambrogio.svc.cluster.local:8080
       - service: http_status:404
