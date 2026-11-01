@@ -28,4 +28,6 @@ data:
         service: http://backend.ambrogio.svc.cluster.local:8080
       - hostname: ambrogio.mircoporetti.me
         service: http://web.ambrogio.svc.cluster.local:8080
+      - hostname: gazzetta.mircoporetti.me
+        service: http://gazzetta.gazzetta.svc.cluster.local
       - service: http_status:404
