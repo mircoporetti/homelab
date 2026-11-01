@@ -1,0 +1,51 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: hangman
+  namespace: flux-system
+spec:
+  image: ghcr.io/mircoporetti/hangman
+  interval: 1m
+  secretRef:
+    name: ghcr-auth
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: hangman
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: hangman
+  policy:
+    numerical:
+      order: asc
+  filterTags:
+    pattern: '^(?P<ts>\d+)-[a-f0-9]{7}$'
+    extract: '$ts'
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: hangman
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: hangman
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcdbot
+        email: fluxcdbot@users.noreply.github.com
+      messageTemplate: "chore: update hangman image to {{.AutomationObject.Namespace}}/{{.AutomationObject.Name}}"
+    push:
+      branch: main
+  update:
+    path: ./k8s/app
+    strategy: Setters

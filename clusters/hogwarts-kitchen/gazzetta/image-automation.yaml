@@ -1,0 +1,49 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: gazzetta-per-tutti
+  namespace: flux-system
+spec:
+  image: ghcr.io/mircoporetti/gazzetta-per-tutti
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: gazzetta-per-tutti
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: gazzetta-per-tutti
+  policy:
+    numerical:
+      order: asc
+  filterTags:
+    pattern: '^(?P<ts>\d+)-[a-f0-9]{7}$'
+    extract: '$ts'
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: gazzetta-per-tutti
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: gazzetta-per-tutti
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcdbot
+        email: fluxcdbot@users.noreply.github.com
+      messageTemplate: "chore: update gazzetta image to {{.AutomationObject.Namespace}}/{{.AutomationObject.Name}}"
+    push:
+      branch: main
+  update:
+    path: ./k8s/app
+    strategy: Setters
